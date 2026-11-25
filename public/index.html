@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FF7A33">
+  <meta name="description" content="Учимся читать по слогам">
+  <title>Прочитайка</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body class="upper">
+
+  <!-- Меню -->
+  <section id="menu" class="screen">
+    <header class="menu-head">
+      <img src="icons/icon.svg" alt="" class="logo" width="76" height="76">
+      <h1>Прочитайка</h1>
+      <p class="tagline">Читаем по слогам</p>
+    </header>
+    <div id="levels" class="levels"></div>
+    <div class="case-switch" role="group" aria-label="Какими буквами писать слова">
+      <span>Буквы:</span>
+      <button type="button" data-case="upper" aria-pressed="true">АБВ</button>
+      <button type="button" data-case="lower" aria-pressed="false">абв</button>
+    </div>
+    <p id="warning" class="warning" hidden></p>
+  </section>
+
+  <!-- Игра -->
+  <section id="game" class="screen" hidden>
+    <header class="game-head">
+      <button type="button" class="icon-btn" id="back" aria-label="В меню">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 4.5 8 12l7.5 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div id="progress" class="progress" aria-hidden="true"></div>
+      <span class="level-tag" id="level-tag"></span>
+    </header>
+
+    <main class="stage">
+      <div id="word" class="word"></div>
+      <p id="tip" class="tip"></p>
+      <button type="button" id="hint" class="chip" hidden>💡 Подсказка</button>
+    </main>
+
+    <footer class="controls">
+      <p id="status" class="status" aria-live="polite"></p>
+      <p id="heard" class="heard"></p>
+      <button type="button" id="mic" class="mic" aria-label="Нажми и прочитай слово">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+      </button>
+      <p class="mic-label" id="mic-label">Нажми и прочитай</p>
+      <div class="helpers" id="helpers" hidden>
+        <button type="button" class="chip" id="listen-word">🔊 Послушать</button>
+        <button type="button" class="chip" id="accept">✓ Засчитать</button>
+        <button type="button" class="chip" id="skip">Пропустить →</button>
+      </div>
+    </footer>
+  </section>
+
+  <!-- Итог раунда -->
+  <section id="done" class="screen screen--center" hidden>
+    <div class="done-card">
+      <div class="done-emoji" id="done-emoji">🏆</div>
+      <h2 id="done-title"></h2>
+      <p id="done-text" class="done-text"></p>
+      <div id="done-stars" class="done-stars"></div>
+      <button type="button" class="big-btn" id="next-level" hidden>Следующий уровень →</button>
+      <button type="button" class="big-btn" id="again">Ещё раз</button>
+      <button type="button" class="big-btn big-btn--ghost" id="to-menu">Выбрать уровень</button>
+    </div>
+  </section>
+
+  <!-- Победа -->
+  <div id="win" class="overlay" hidden>
+    <div class="win-card" role="dialog" aria-modal="true" aria-labelledby="win-text">
+      <div class="win-emoji" id="win-emoji"></div>
+      <div class="win-word cased" id="win-word"></div>
+      <p class="win-text" id="win-text"></p>
+      <button type="button" class="big-btn" id="next">Дальше →</button>
+    </div>
+  </div>
+
+  <canvas id="confetti" aria-hidden="true"></canvas>
+</body>
+</html>
