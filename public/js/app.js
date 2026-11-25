@@ -1,11 +1,15 @@
 import { LEVELS } from './words.js';
+import { fusions, hasVowel } from './split.js';
 import { isMatch } from './match.js';
 import { canRecognize, listen } from './speech.js';
 import { canSpeak, speak, stopSpeaking } from './tts.js';
 import { confetti, jingle, stopConfetti, unlockAudio } from './effects.js';
 
 const ROUND_SIZE = 5;
+// Звуки, которые дети часто ещё не выговаривают. Слова с ними можно отключить в настройках.
+const HARD_LETTERS = ['р', 'л', 'ш', 'ж', 'ч', 'щ', 'с', 'з', 'ц'];
 const $ = (id) => document.getElementById(id);
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const TIPS = {
   tiles: 'Нажми на слог — я его прочитаю',
@@ -41,6 +45,20 @@ const store = {
   },
 };
 
+const decks = new Map(); // перемешанные колоды по уровням, чтобы слова не повторялись подряд
+
+const settings = {
+  split: 'fusions',              // 'fusions' (ко-ш-ка) или 'syllables' (кош-ка)
+  upper: store.get('upper', true),
+  skip: [],                      // буквы, слова с которыми пропускаем
+  ...store.get('settings', {}),
+};
+
+function saveSettings() {
+  store.set('settings', settings);
+  decks.clear();
+}
+
 const state = {
   level: null,
   round: [],       // слова текущего раунда
@@ -50,15 +68,16 @@ const state = {
   hint: false,
   listening: null, // активная сессия распознавания
 };
-const decks = new Map(); // перемешанные колоды по уровням, чтобы слова не повторялись подряд
-let speechRun = 0;       // номер текущей озвучки, чтобы новая прерывала старую
+let speechRun = 0; // номер текущей озвучки, чтобы новая прерывала старую
 
 const currentWord = () => state.round[state.index];
+const playableWords = (level) => level.words.filter((word) => !settings.skip.some((letter) => word.text.includes(letter)));
+const partsOf = (word) => (settings.split === 'fusions' ? fusions(word.text) : word.syllables);
 
 // ---------- Экраны ----------
 
 function show(screen) {
-  for (const id of ['menu', 'game', 'done']) $(id).hidden = id !== screen;
+  for (const id of ['menu', 'settings', 'game', 'done']) $(id).hidden = id !== screen;
   window.scrollTo(0, 0);
 }
 
@@ -75,9 +94,11 @@ function goMenu() {
 function renderMenu() {
   const stars = store.get('stars', {});
   $('levels').replaceChildren(...LEVELS.map((level) => {
+    const available = playableWords(level).length;
     const card = document.createElement('button');
     card.type = 'button';
     card.className = 'level-card';
+    card.disabled = available === 0;
     card.style.setProperty('--level', level.color);
     card.innerHTML = `
       <span class="level-num">${level.id}</span>
@@ -89,19 +110,21 @@ function renderMenu() {
       <span class="level-stars"><span aria-hidden="true">⭐</span> ${stars[level.id] || 0}</span>`;
     card.querySelector('.level-title').textContent = level.title;
     card.querySelector('.level-example').textContent = level.example;
-    card.querySelector('.level-about').textContent = level.about;
+    card.querySelector('.level-about').textContent = available ? level.about : 'Все слова со звуками, которые сейчас пропускаем';
     card.addEventListener('click', () => {
       unlockAudio();
       startRound(level);
     });
     return card;
   }));
+  $('filter-note').hidden = settings.skip.length === 0;
+  $('filter-note').textContent = 'Пропускаем слова с буквами: ' + settings.skip.map((l) => l.toUpperCase()).join(', ');
 }
 
-function applyCase(upper) {
-  document.body.classList.toggle('upper', upper);
+function applyCase() {
+  document.body.classList.toggle('upper', settings.upper);
   for (const button of document.querySelectorAll('[data-case]')) {
-    button.setAttribute('aria-pressed', String((button.dataset.case === 'upper') === upper));
+    button.setAttribute('aria-pressed', String((button.dataset.case === 'upper') === settings.upper));
   }
 }
 
@@ -117,6 +140,35 @@ function checkSupport() {
   $('warning').hidden = problems.length === 0;
 }
 
+// ---------- Настройки ----------
+
+function renderSettings() {
+  for (const button of document.querySelectorAll('[data-split]')) {
+    button.setAttribute('aria-pressed', String(button.dataset.split === settings.split));
+  }
+  $('example-fusions').replaceChildren(...renderParts(fusions('кошка')));
+  $('example-syllables').replaceChildren(...renderParts(['кош', 'ка']));
+  applyCase();
+  $('skip-letters').replaceChildren(...HARD_LETTERS.map((letter) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'letter cased';
+    button.textContent = letter;
+    button.setAttribute('aria-pressed', String(settings.skip.includes(letter)));
+    button.addEventListener('click', () => {
+      settings.skip = settings.skip.includes(letter)
+        ? settings.skip.filter((l) => l !== letter)
+        : [...settings.skip, letter];
+      saveSettings();
+      renderSettings();
+    });
+    return button;
+  }));
+  const total = LEVELS.reduce((n, level) => n + level.words.length, 0);
+  const left = LEVELS.reduce((n, level) => n + playableWords(level).length, 0);
+  $('words-left').textContent = `Слов в игре: ${left} из ${total}`;
+}
+
 // ---------- Раунд ----------
 
 function shuffle(list) {
@@ -128,12 +180,13 @@ function shuffle(list) {
 }
 
 function drawWords(level) {
-  const count = Math.min(ROUND_SIZE, level.words.length);
+  const words = playableWords(level);
+  const count = Math.min(ROUND_SIZE, words.length);
   const picked = [];
   while (picked.length < count) {
     let deck = decks.get(level.id);
     if (!deck?.length) {
-      deck = shuffle([...level.words]);
+      deck = shuffle([...words]);
       decks.set(level.id, deck);
     }
     const word = deck.pop();
@@ -147,6 +200,7 @@ function startRound(level) {
   state.round = drawWords(level);
   state.results = [];
   state.index = 0;
+  if (!state.round.length) return goMenu();
   $('level-tag').textContent = `Ур. ${level.id}`;
   document.documentElement.style.setProperty('--level', level.color);
   show('game');
@@ -173,6 +227,24 @@ function renderProgress() {
   }));
 }
 
+// Слоги и слияния (с гласной) — цветные, под дужкой, озвучиваются по нажатию.
+// Отдельные согласные — с точкой и без звука: синтезатор не умеет произносить
+// одиночный звук и вместо [ш] сказал бы «ша».
+function renderParts(parts, onTap) {
+  let colored = 0;
+  return parts.map((part) => {
+    const voiced = hasVowel(part);
+    const element = document.createElement(onTap && voiced ? 'button' : 'span');
+    element.className = 'syl ' + (voiced ? (colored++ % 2 ? 'syl--b' : 'syl--a') : 'syl--single');
+    element.textContent = part;
+    if (onTap && voiced) {
+      element.type = 'button';
+      element.addEventListener('click', () => onTap(part, element));
+    }
+    return element;
+  });
+}
+
 function renderWord() {
   const word = currentWord();
   const mode = state.level.display === 'plain' && state.hint ? 'arcs' : state.level.display;
@@ -182,14 +254,7 @@ function renderWord() {
   if (mode === 'plain') {
     box.textContent = word.text;
   } else {
-    box.replaceChildren(...word.syllables.map((syllable) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'syl';
-      button.textContent = syllable;
-      button.addEventListener('click', () => saySyllable(syllable, button));
-      return button;
-    }));
+    box.replaceChildren(...renderParts(partsOf(word), saySyllable));
   }
   $('tip').textContent = TIPS[mode];
   $('hint').hidden = state.level.display !== 'plain' || state.hint;
@@ -217,11 +282,13 @@ async function listenWord() {
     renderWord();
   }
   const word = currentWord();
+  const parts = partsOf(word);
   const elements = $('word').querySelectorAll('.syl');
-  for (let i = 0; i < word.syllables.length; i++) {
+  for (let i = 0; i < parts.length; i++) {
     if (run !== speechRun) return;
     pulse(elements[i]);
-    await speak(word.syllables[i], { rate: 0.7 });
+    if (hasVowel(parts[i])) await speak(parts[i], { rate: 0.7 });
+    else await wait(450);
   }
   if (run === speechRun) speak(word.text);
 }
@@ -346,7 +413,7 @@ function showDone() {
   $('done-text').textContent = `Прочитано слов: ${wins} из ${total}`;
   $('done-stars').textContent = '⭐'.repeat(wins);
   const nextLevel = LEVELS.find((l) => l.id === state.level.id + 1);
-  $('next-level').hidden = !(nextLevel && wins === total);
+  $('next-level').hidden = !(nextLevel && playableWords(nextLevel).length && wins === total);
   if (nextLevel) $('next-level').textContent = `На уровень ${nextLevel.id} →`;
   show('done');
   if (wins) {
@@ -367,18 +434,28 @@ $('next').addEventListener('click', next);
 $('again').addEventListener('click', () => startRound(state.level));
 $('next-level').addEventListener('click', () => startRound(LEVELS.find((l) => l.id === state.level.id + 1)));
 $('to-menu').addEventListener('click', goMenu);
+$('open-settings').addEventListener('click', () => { renderSettings(); show('settings'); });
+$('settings-back').addEventListener('click', goMenu);
+$('settings-done').addEventListener('click', goMenu);
 for (const button of document.querySelectorAll('[data-case]')) {
   button.addEventListener('click', () => {
-    const upper = button.dataset.case === 'upper';
-    store.set('upper', upper);
-    applyCase(upper);
+    settings.upper = button.dataset.case === 'upper';
+    saveSettings();
+    applyCase();
+  });
+}
+for (const button of document.querySelectorAll('[data-split]')) {
+  button.addEventListener('click', () => {
+    settings.split = button.dataset.split;
+    saveSettings();
+    renderSettings();
   });
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) state.listening?.stop(true);
 });
 
-applyCase(store.get('upper', true));
+applyCase();
 renderMenu();
 checkSupport();
 show('menu');

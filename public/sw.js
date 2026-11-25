@@ -2,13 +2,14 @@
 // Стратегия «сначала сеть»: свежие файлы берутся с сервера, кэш нужен только когда сети нет.
 // (Само распознавание речи без интернета всё равно не работает.)
 
-const CACHE = 'prochitaika-v1';
+const CACHE = 'prochitaika-v2';
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
   './js/app.js',
   './js/words.js',
+  './js/split.js',
   './js/match.js',
   './js/speech.js',
   './js/tts.js',

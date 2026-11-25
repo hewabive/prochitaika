@@ -17,17 +17,60 @@
   <!-- Меню -->
   <section id="menu" class="screen">
     <header class="menu-head">
+      <button type="button" class="icon-btn settings-btn" id="open-settings" aria-label="Настройки">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.01-1.58zM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2z"/></svg>
+      </button>
       <img src="icons/icon.svg" alt="" class="logo" width="76" height="76">
       <h1>Прочитайка</h1>
       <p class="tagline">Читаем по слогам</p>
     </header>
     <div id="levels" class="levels"></div>
-    <div class="case-switch" role="group" aria-label="Какими буквами писать слова">
-      <span>Буквы:</span>
-      <button type="button" data-case="upper" aria-pressed="true">АБВ</button>
-      <button type="button" data-case="lower" aria-pressed="false">абв</button>
-    </div>
+    <p id="filter-note" class="filter-note" hidden></p>
     <p id="warning" class="warning" hidden></p>
+  </section>
+
+  <!-- Настройки -->
+  <section id="settings" class="screen" hidden>
+    <header class="game-head">
+      <button type="button" class="icon-btn" id="settings-back" aria-label="В меню">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 4.5 8 12l7.5 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <h2 class="screen-title">Настройки</h2>
+    </header>
+
+    <div class="settings">
+      <section class="setting">
+        <h3>Как делить слово</h3>
+        <p class="setting-hint">Слияние согласной с гласной — под дужкой. Буква, которую читают отдельно, отмечена точкой.</p>
+        <div class="options">
+          <button type="button" class="option" data-split="fusions">
+            <span class="word word--arcs word--mini cased" id="example-fusions"></span>
+            <span class="option-text">Слияния</span>
+          </button>
+          <button type="button" class="option" data-split="syllables">
+            <span class="word word--arcs word--mini cased" id="example-syllables"></span>
+            <span class="option-text">Слоги</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="setting">
+        <h3>Буквы</h3>
+        <div class="options">
+          <button type="button" class="option option--case" data-case="upper">АБВ</button>
+          <button type="button" class="option option--case" data-case="lower">абв</button>
+        </div>
+      </section>
+
+      <section class="setting">
+        <h3>Пропускать слова с буквами</h3>
+        <p class="setting-hint">Если ребёнок пока не выговаривает звук, распознавание может не понять слово. Отмеченные буквы не будут попадаться.</p>
+        <div class="letters" id="skip-letters"></div>
+        <p class="setting-hint" id="words-left"></p>
+      </section>
+    </div>
+
+    <button type="button" class="big-btn" id="settings-done">Готово</button>
   </section>
 
   <!-- Игра -->
