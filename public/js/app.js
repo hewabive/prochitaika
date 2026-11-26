@@ -16,6 +16,7 @@ const TIPS = {
   arcs: 'Нажми на слог, чтобы его услышать',
   plain: 'Прочитай слово целиком',
 };
+const REST_TIP = 'Твоя очередь читать!';
 
 const PRAISE = ['Молодец!', 'Отлично!', 'Здорово!', 'Умница!', 'Супер!', 'Так держать!'];
 
@@ -83,6 +84,7 @@ function show(screen) {
 
 function goMenu() {
   state.listening?.stop(true);
+  endRest();
   stopSpeaking();
   stopConfetti();
   renderMenu();
@@ -210,6 +212,7 @@ function startRound(level) {
 function renderTurn() {
   state.fails = 0;
   state.hint = false;
+  endRest();
   renderProgress();
   renderWord();
   setStatus('');
@@ -245,9 +248,11 @@ function renderParts(parts, onTap) {
   });
 }
 
+const displayMode = () => (state.level.display === 'plain' && state.hint ? 'arcs' : state.level.display);
+
 function renderWord() {
   const word = currentWord();
-  const mode = state.level.display === 'plain' && state.hint ? 'arcs' : state.level.display;
+  const mode = displayMode();
   const box = $('word');
   box.className = `word word--${mode} cased`;
   if (word.text.length >= 8) box.classList.add('word--long');
@@ -256,22 +261,70 @@ function renderWord() {
   } else {
     box.replaceChildren(...renderParts(partsOf(word), saySyllable));
   }
-  $('tip').textContent = TIPS[mode];
+  renderTip();
   $('hint').hidden = state.level.display !== 'plain' || state.hint;
 }
 
-function pulse(element) {
+function renderTip() {
+  $('tip-text').textContent = isResting() ? REST_TIP : TIPS[displayMode()];
+}
+
+function restartAnimation(element, className) {
   if (!element) return;
-  element.classList.remove('is-speaking');
+  element.classList.remove(className);
   void element.offsetWidth; // перезапуск CSS-анимации
-  element.classList.add('is-speaking');
+  element.classList.add(className);
+}
+
+const pulse = (element) => restartAnimation(element, 'is-speaking');
+
+// ---------- Пауза между озвучками ----------
+// Чтобы ребёнок не нажимал слог за слогом, а пробовал читать сам, после озвучки слоги
+// «отдыхают» (pause в words.js; на первом уровне паузы нет). Пока идёт пауза, рядом
+// с подсказкой заполняется кружок с динамиком, дужки бледнеют и постепенно наливаются цветом.
+// Нажатие на слог в это время только покачивает его и кружок.
+
+let restTimer = 0;
+let restRun = 0;
+
+const isResting = () => $('game').classList.contains('is-resting');
+
+function startRest(seconds, spoken) {
+  const run = ++restRun;
+  clearTimeout(restTimer);
+  const game = $('game');
+  game.classList.remove('is-counting');
+  game.classList.add('is-resting');
+  game.style.setProperty('--rest', `${seconds}s`);
+  renderTip();
+  // Отсчёт начинаем, когда слог договорён, иначе длинная озвучка съест паузу.
+  spoken.then(() => {
+    if (run !== restRun) return;
+    restartAnimation(game, 'is-counting');
+    restTimer = setTimeout(() => endRest(true), seconds * 1000);
+  });
+}
+
+function endRest(ready = false) {
+  restRun++;
+  clearTimeout(restTimer);
+  if (!isResting()) return;
+  $('game').classList.remove('is-resting', 'is-counting');
+  renderTip();
+  if (ready) $('word').querySelectorAll('button.syl').forEach(pulse); // слоги «проснулись»
 }
 
 function saySyllable(syllable, element) {
+  if (isResting()) {
+    restartAnimation(element, 'is-waiting');
+    restartAnimation($('rest'), 'is-waiting');
+    return;
+  }
   state.listening?.stop(true); // не слушаем сами себя
   speechRun++;
   pulse(element);
-  speak(syllable, { rate: 0.7 });
+  const spoken = speak(syllable, { rate: 0.7 });
+  if (state.level.pause > 0) startRest(state.level.pause, spoken);
 }
 
 async function listenWord() {

@@ -34,3 +34,9 @@ test('слова не повторяются и на каждом уровне �
     }
   }
 });
+
+test('пауза между озвучками задана числом секунд', () => {
+  for (const level of LEVELS) {
+    assert.ok(Number.isFinite(level.pause) && level.pause >= 0, `уровень ${level.id}: pause = ${level.pause}`);
+  }
+});

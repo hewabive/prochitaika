@@ -48,11 +48,13 @@ const L4 = [
 //   tiles — каждый слог на отдельной плашке, нажатие озвучивает слог;
 //   arcs  — слово целиком, слоги разного цвета с дужками, нажатие озвучивает слог;
 //   plain — просто слово; кнопка «Подсказка» включает дужки.
+// pause: сколько секунд после озвучки слога нельзя озвучить следующий.
+//   Чтобы ребёнок не слушал слог за слогом, а пробовал читать сам.
 export const LEVELS = [
-  { id: 1, title: 'Первые слоги', about: 'Слоги отдельно, можно послушать', example: 'ма-ма', display: 'tiles', color: '#1FA971', words: parse(L1) },
-  { id: 2, title: 'Слоги-дужки', about: 'Слово целиком, слоги под дужками', example: 'ма-ши-на', display: 'arcs', color: '#3A7DF0', words: parse(L2) },
-  { id: 3, title: 'Целое слово', about: 'Без дужек, есть подсказка', example: 'кошка', display: 'plain', color: '#8E55E0', words: parse(L3) },
-  { id: 4, title: 'Длинные слова', about: '3–5 слогов, есть подсказка', example: 'черепаха', display: 'plain', color: '#E8488F', words: parse(L4) },
+  { id: 1, title: 'Первые слоги', about: 'Слоги отдельно, можно послушать', example: 'ма-ма', display: 'tiles', pause: 0, color: '#1FA971', words: parse(L1) },
+  { id: 2, title: 'Слоги-дужки', about: 'Слово целиком, слоги под дужками', example: 'ма-ши-на', display: 'arcs', pause: 3, color: '#3A7DF0', words: parse(L2) },
+  { id: 3, title: 'Целое слово', about: 'Без дужек, есть подсказка', example: 'кошка', display: 'plain', pause: 5, color: '#8E55E0', words: parse(L3) },
+  { id: 4, title: 'Длинные слова', about: '3–5 слогов, есть подсказка', example: 'черепаха', display: 'plain', pause: 7, color: '#E8488F', words: parse(L4) },
 ];
 
 function parse(list) {
