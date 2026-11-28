@@ -179,13 +179,13 @@ h1 { margin: 10px 0 0; font-size: 34px; font-weight: 900; letter-spacing: -.5px;
 }
 .icon-btn svg { width: 24px; height: 24px; }
 
-.progress { flex: 1; display: flex; justify-content: center; align-items: center; gap: 10px; }
-.dot { width: 14px; height: 14px; border-radius: 50%; background: var(--line); transition: transform .2s; }
+/* Точки и звёздочки сжимаются, чтобы весь раунд влез в строку даже на узком телефоне. */
+.progress { flex: 1; min-width: 0; display: flex; justify-content: center; align-items: center; gap: 6px; }
+.dot { flex: 0 1 14px; min-width: 0; aspect-ratio: 1; border-radius: 50%; background: var(--line); transition: transform .2s; }
 .dot.is-current { background: var(--level); transform: scale(1.25); }
 .dot.is-skip { background: #CFC6B6; }
 .dot.is-win {
-  width: 24px;
-  height: 24px;
+  flex-basis: 22px;
   border-radius: 0;
   background: var(--gold);
   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
@@ -416,7 +416,8 @@ h1 { margin: 10px 0 0; font-size: 34px; font-weight: 900; letter-spacing: -.5px;
 .done-emoji { font-size: 110px; line-height: 1.1; animation: bounce-in .8s cubic-bezier(.2, 1.6, .4, 1) both; }
 .done-card h2 { margin: 10px 0 0; font-size: 28px; font-weight: 900; }
 .done-text { margin: 6px 0 0; color: var(--muted); font-size: 18px; font-weight: 700; }
-.done-stars { min-height: 44px; margin: 10px 0 20px; font-size: 36px; letter-spacing: 4px; }
+/* Десять звёзд должны влезть в одну строку и на узком телефоне. */
+.done-stars { min-height: 44px; margin: 10px 0 20px; font-size: min(30px, 5.6vw); line-height: 44px; letter-spacing: 1px; }
 
 #confetti {
   position: fixed;

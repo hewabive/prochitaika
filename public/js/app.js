@@ -1,11 +1,10 @@
-import { LEVELS } from './words.js';
+import { LEVELS, ROUND_SIZE } from './words.js';
 import { fusions, hasVowel } from './split.js';
 import { isMatch } from './match.js';
 import { canRecognize, listen } from './speech.js';
 import { canSpeak, speak, stopSpeaking } from './tts.js';
 import { confetti, jingle, stopConfetti, unlockAudio } from './effects.js';
 
-const ROUND_SIZE = 5;
 // Звуки, которые дети часто ещё не выговаривают. Слова с ними можно отключить в настройках.
 const HARD_LETTERS = ['р', 'л', 'ш', 'ж', 'ч', 'щ', 'с', 'з', 'ц'];
 const $ = (id) => document.getElementById(id);
@@ -465,9 +464,8 @@ function showDone() {
   $('done-title').textContent = wins === total ? 'Ура! Все слова прочитаны!' : wins > 0 ? 'Хорошая работа!' : 'Попробуем ещё?';
   $('done-text').textContent = `Прочитано слов: ${wins} из ${total}`;
   $('done-stars').textContent = '⭐'.repeat(wins);
-  const nextLevel = LEVELS.find((l) => l.id === state.level.id + 1);
-  $('next-level').hidden = !(nextLevel && playableWords(nextLevel).length && wins === total);
-  if (nextLevel) $('next-level').textContent = `На уровень ${nextLevel.id} →`;
+  // Кнопки «На следующий уровень» тут нет: главное действие — продолжать на этом же
+  // уровне, а сменить уровень взрослый может через меню.
   show('done');
   if (wins) {
     confetti();
@@ -485,7 +483,6 @@ $('accept').addEventListener('click', win);
 $('skip').addEventListener('click', skip);
 $('next').addEventListener('click', next);
 $('again').addEventListener('click', () => startRound(state.level));
-$('next-level').addEventListener('click', () => startRound(LEVELS.find((l) => l.id === state.level.id + 1)));
 $('to-menu').addEventListener('click', goMenu);
 $('open-settings').addEventListener('click', () => { renderSettings(); show('settings'); });
 $('settings-back').addEventListener('click', goMenu);

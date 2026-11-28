@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LEVELS } from '../public/js/words.js';
+import { LEVELS, ROUND_SIZE } from '../public/js/words.js';
 
 const VOWELS = /[аеёиоуыэюя]/g;
 
@@ -27,7 +27,7 @@ test('у каждого слова есть картинка и только р�
 test('слова не повторяются и на каждом уровне хватает слов на раунд', () => {
   const seen = new Set();
   for (const level of LEVELS) {
-    assert.ok(level.words.length >= 5, `на уровне ${level.id} меньше 5 слов`);
+    assert.ok(level.words.length >= ROUND_SIZE, `на уровне ${level.id} меньше ${ROUND_SIZE} слов`);
     for (const word of level.words) {
       assert.ok(!seen.has(word.text), `слово «${word.text}» встречается дважды`);
       seen.add(word.text);
