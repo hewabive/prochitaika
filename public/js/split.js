@@ -7,6 +7,19 @@ const SIGNS = new Set('ьъ');
 
 export const hasVowel = (part) => [...part].some((ch) => VOWELS.has(ch));
 
+// Знак ударения после гласной слога (для озвучки). Без него синтезатор принимает
+// «со», «ко», «по», «но», «не», «же» за безударные предлоги и частицы и говорит
+// «са», «ка», «па», «на», «ни», «жы». Ребёнок читает каждый слог с полной гласной.
+const STRESS = '́';
+
+export function stressed(part) {
+  const letters = [...part];
+  const i = letters.findIndex((ch) => VOWELS.has(ch));
+  if (i < 0 || letters[i] === 'ё') return part; // «ё» всегда ударная
+  letters.splice(i + 1, 0, STRESS);
+  return letters.join('');
+}
+
 export function fusions(word) {
   const letters = [...word];
   const parts = [];

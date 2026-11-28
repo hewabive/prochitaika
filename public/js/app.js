@@ -1,5 +1,5 @@
 import { LEVELS, ROUND_SIZE } from './words.js';
-import { fusions, hasVowel } from './split.js';
+import { fusions, hasVowel, stressed } from './split.js';
 import { isMatch } from './match.js';
 import { canRecognize, listen } from './speech.js';
 import { canSpeak, speak, stopSpeaking } from './tts.js';
@@ -322,7 +322,7 @@ function saySyllable(syllable, element) {
   state.listening?.stop(true); // не слушаем сами себя
   speechRun++;
   pulse(element);
-  const spoken = speak(syllable, { rate: 0.7 });
+  const spoken = speak(stressed(syllable), { rate: 0.7 });
   if (state.level.pause > 0) startRest(state.level.pause, spoken);
 }
 
@@ -339,7 +339,7 @@ async function listenWord() {
   for (let i = 0; i < parts.length; i++) {
     if (run !== speechRun) return;
     pulse(elements[i]);
-    if (hasVowel(parts[i])) await speak(parts[i], { rate: 0.7 });
+    if (hasVowel(parts[i])) await speak(stressed(parts[i]), { rate: 0.7 });
     else await wait(450);
   }
   if (run === speechRun) speak(word.text);
