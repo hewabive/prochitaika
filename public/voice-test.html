@@ -37,7 +37,7 @@
     import { speak } from './js/tts.js';
     import { forSpeech } from './js/split.js';
 
-    const DEFAULT = 'мя ля ня я';
+    const DEFAULT = 'зе се';
     const ch = (code) => String.fromCharCode(code);
     const ACUTE = ch(0x301);
     const ZWNJ = ch(0x200C);
@@ -66,6 +66,11 @@
       ['Латинская буква с ударением', ({ head, vowel, tail }) => LATIN_ACUTE[vowel] && head + LATIN_ACUTE[vowel] + tail],
       ['Через мягкий знак: «мьа»', ({ head, vowel, tail }) => head && SOFT[vowel] && head + SOFT[vowel] + tail],
       ['Через мягкий знак с ударением', ({ head, vowel, tail }) => head && SOFT[vowel] && head + SOFT[vowel] + ACUTE + tail],
+      ['Две гласные, ударение на первую', ({ head, vowel, tail }) => head + vowel + ACUTE + vowel + tail],
+      ['Две гласные, ударение на вторую', ({ head, vowel, tail }) => head + vowel + vowel + ACUTE + tail],
+      ['Две гласные и «!»', ({ head, vowel, tail }) => head + vowel + vowel + tail + '!'],
+      ['Две гласные и «…»', ({ head, vowel, tail }) => head + vowel + vowel + tail + '\u2026'],
+      ['Мягкий знак и «е»', ({ head, vowel, tail }) => head && vowel === 'е' && head + 'ье' + ACUTE + tail],
     ];
 
     function button(label, text) {

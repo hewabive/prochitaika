@@ -34,7 +34,7 @@ test('любое слово из словаря делится без потер
   }
 });
 
-test('слоги для озвучки: ударение на гласную, особые написания для «ко» и «до»', () => {
+test('слоги для озвучки: ударение на гласную, особые написания для трудных слогов', () => {
   assert.equal(forSpeech('со'), 'со\u0301');
   assert.equal(forSpeech('по'), 'по\u0301');
   assert.equal(forSpeech('кош'), 'ко\u0301ш');
@@ -44,4 +44,7 @@ test('слоги для озвучки: ударение на гласную, о
   assert.equal(forSpeech('ш'), 'ш');
   assert.equal(forSpeech('ко'), 'к\u00F3');
   assert.equal(forSpeech('до'), 'доо');
+  assert.equal(forSpeech('мя'), 'мьа\u0301');
+  assert.equal(forSpeech('бе'), 'бьэ\u0301');
+  assert.equal(forSpeech('зе'), 'зее');
 });
