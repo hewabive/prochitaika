@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fusions, hasVowel, stressed } from '../public/js/split.js';
+import { fusions, hasVowel, forSpeech } from '../public/js/split.js';
 import { LEVELS } from '../public/js/words.js';
 
 test('делит слово на слияния и отдельные буквы', () => {
@@ -34,12 +34,14 @@ test('любое слово из словаря делится без потер
   }
 });
 
-test('ставит ударение на гласную слога, чтобы «со» не звучало как «са»', () => {
-  assert.equal(stressed('со'), 'со\u0301');
-  assert.equal(stressed('ко'), 'ко\u0301');
-  assert.equal(stressed('кош'), 'ко\u0301ш');
-  assert.equal(stressed('пью'), 'пью\u0301');
-  assert.equal(stressed('у'), 'у\u0301');
-  assert.equal(stressed('ё'), 'ё');
-  assert.equal(stressed('ш'), 'ш');
+test('слоги для озвучки: ударение на гласную, особые написания для «ко» и «до»', () => {
+  assert.equal(forSpeech('со'), 'со\u0301');
+  assert.equal(forSpeech('по'), 'по\u0301');
+  assert.equal(forSpeech('кош'), 'ко\u0301ш');
+  assert.equal(forSpeech('пью'), 'пью\u0301');
+  assert.equal(forSpeech('у'), 'у\u0301');
+  assert.equal(forSpeech('ё'), 'ё');
+  assert.equal(forSpeech('ш'), 'ш');
+  assert.equal(forSpeech('ко'), 'к\u00F3');
+  assert.equal(forSpeech('до'), 'доо');
 });
