@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Проверка озвучки</title>
+  <style>
+    :root { --bg: #FFF8EE; --ink: #2B2340; --muted: #7A7290; --card: #FFFFFF; --line: #EDE4D6; --accent: #FF7A33; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; background: var(--bg); color: var(--ink); font: 17px/1.4 system-ui, sans-serif; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    p { margin: 0 0 12px; color: var(--muted); }
+    .row { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px 12px; margin-bottom: 10px; }
+    .row h2 { font-size: 16px; margin: 0 0 8px; }
+    .row h2 b { color: var(--accent); }
+    .cells { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+    button { font: 700 18px system-ui, sans-serif; padding: 10px 0; border: 0; border-radius: 12px; background: #4C3BCF; color: #fff; }
+    button:active { background: var(--accent); }
+    #voice { font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>Проверка озвучки слогов</h1>
+  <p>Нажимайте на слоги в каждой строке. Запомните номера строк, где <b>КО</b> и <b>ДО</b> звучат правильно, с «о», а не с «а».</p>
+  <p id="voice"></p>
+  <div id="rows"></div>
+
+  <script type="module">
+    import { speak } from './js/tts.js';
+
+    const SYLLABLES = ['ко', 'до', 'по', 'но', 'то', 'во'];
+    const ACUTE = '́';
+    const VARIANTS = [
+      ['Как сейчас (знак ударения)', (s) => s + ACUTE],
+      ['Ударение и «!»', (s) => s + ACUTE + '!'],
+      ['Ударение и «…»', (s) => s + ACUTE + '…'],
+      ['Протяжно, две «о»', (s) => s + 'о'],
+      ['Невидимый разделитель', (s) => s[0] + '‌' + s[1]],
+      ['Мягкий перенос', (s) => s[0] + '­' + s[1]],
+      ['Латинская «o»', (s) => s[0] + 'o'],
+      ['Латинская «ó»', (s) => s[0] + 'ó'],
+    ];
+
+    document.getElementById('rows').replaceChildren(...VARIANTS.map(([title, make], i) => {
+      const row = document.createElement('section');
+      row.className = 'row';
+      row.innerHTML = `<h2><b>${i + 1}.</b> ${title}</h2><div class="cells"></div>`;
+      row.querySelector('.cells').replaceChildren(...SYLLABLES.map((syllable) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = syllable.toUpperCase();
+        button.addEventListener('click', () => speak(make(syllable), { rate: 0.7 }));
+        return button;
+      }));
+      return row;
+    }));
+
+    const showVoice = () => {
+      const russian = speechSynthesis.getVoices().filter((v) => /^ru/i.test(v.lang));
+      const voice = russian.find((v) => v.localService) || russian[0];
+      document.getElementById('voice').textContent = voice ? `Голос: ${voice.name}` : 'Русский голос не найден';
+    };
+    showVoice();
+    speechSynthesis.addEventListener('voiceschanged', showVoice);
+  </script>
+</body>
+</html>
