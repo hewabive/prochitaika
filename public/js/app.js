@@ -75,10 +75,17 @@ const playableWords = (level) => level.words.filter((word) => !settings.skip.som
 const partsOf = (word) => (settings.split === 'fusions' ? fusions(word.text) : word.syllables);
 
 // ---------- Экраны ----------
+// Ребёнок иногда случайно нажимает системную кнопку «Назад». Поэтому, пока открыт не главный
+// экран, в истории браузера лежит лишняя запись (INNER). «Назад» снимает её, а не закрывает
+// приложение (см. обработчик popstate). В меню записи нет, и «Назад» работает как обычно.
+
+const INNER = 'prochitaika-inner';
+const hasInnerEntry = () => history.state === INNER;
 
 function show(screen) {
   for (const id of ['menu', 'settings', 'game', 'done']) $(id).hidden = id !== screen;
   window.scrollTo(0, 0);
+  if (screen !== 'menu' && !hasInnerEntry()) history.pushState(INNER, '');
 }
 
 function goMenu() {
@@ -88,6 +95,26 @@ function goMenu() {
   stopConfetti();
   renderMenu();
   show('menu');
+  if (hasInnerEntry()) history.back(); // в меню «Назад» снова должен закрывать приложение
+}
+
+// Системная «Назад»: из настроек ведёт в меню, а в игре и на итогах раунда ничего не делает,
+// чтобы случайное нажатие не сбило раунд. Взрослый выходит в меню кнопкой ← на экране.
+window.addEventListener('popstate', () => {
+  if (!$('settings').hidden) goMenu();
+  else if (!$('game').hidden || !$('done').hidden) history.pushState(INNER, '');
+});
+
+// На телефоне разворачиваемся на весь экран, так системные кнопки спрятаны и их труднее задеть.
+// Установленное приложение и так открывается на весь экран (display в manifest.webmanifest).
+// В обычной вкладке Chrome или пока телефон не обновил установленное приложение, просим
+// полноэкранный режим при нажатии: без нажатия браузер его не включает. Если ребёнок из него
+// вышел, следующее нажатие включит его снова.
+function enterFullscreen() {
+  if (!matchMedia('(pointer: coarse)').matches) return; // на компьютере не мешаем
+  if (document.fullscreenElement || !document.fullscreenEnabled) return;
+  if (matchMedia('(display-mode: fullscreen)').matches) return;
+  document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => { /* не страшно */ });
 }
 
 // ---------- Меню ----------
@@ -501,6 +528,8 @@ for (const button of document.querySelectorAll('[data-split]')) {
     renderSettings();
   });
 }
+// После обработчиков кнопок, чтобы смена размера экрана не мешала самому нажатию.
+document.addEventListener('click', enterFullscreen);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) state.listening?.stop(true);
 });

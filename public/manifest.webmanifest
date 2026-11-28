@@ -5,7 +5,7 @@
   "lang": "ru",
   "start_url": "./",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#FFF8EE",
   "theme_color": "#FF7A33",
